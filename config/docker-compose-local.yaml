@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+
+  postgres:
+    container_name: films-postgres
+    image: postgres:alpine
+    environment:
+      POSTGRES_DB: "${POSTGRES_NAME}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+    volumes:
+      - ./postgresql.conf:/etc/postgresql.conf
+      - ../db-data/:/var/lib/postgresql/data/
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_NAME}" ] 
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  migrate:
+    container_name: films-migrate
+    image: migrate/migrate
+    depends_on: 
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ../migrations:/migrations
+    command: 
+      [ "-path", "/migrations", "-database",  "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_ADDRESS}/${POSTGRES_NAME}?sslmode=disable", "up" ]
+
+  api:
+    container_name: films-api
+    build:
+      context: ..
+      dockerfile: ./config/Dockerfile
+      target: runner
+    depends_on: 
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    volumes:
+      - ../logs:/app/logs
+    ports:
+      - ${RUN_PORT}:${RUN_PORT}
+  
+  swagger:
+    container_name: films-swagger
+    image: swaggerapi/swagger-ui
+    environment:
+      SWAGGER_JSON: "/app/swagger.yaml"
+    volumes:
+      - ../api/swagger.yml:/app/swagger.yml
+    ports:
+      - 8000:8080
+  

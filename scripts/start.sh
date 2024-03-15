@@ -1,0 +1,1 @@
+docker-compose --env-file ./.env -f config/docker-compose-local.yaml up -d --force-recreate --build
