@@ -6,12 +6,13 @@ import (
 	"net/http"
 
 	"github.com/itmosha/vk-internship-2024/internal/entity"
+	repo "github.com/itmosha/vk-internship-2024/internal/repo/postgres"
 )
 
 type ActorUsecaseInterface interface {
 	Create(ctx *context.Context, body *entity.ActorCreateBody) (actor *entity.Actor, err error)
-	Update(ctx *context.Context, id int, body *entity.ActorUpdateBody) (actor *entity.Actor, err error)
-	Replace(ctx *context.Context, id int, body *entity.ActorReplaceBody) (actor *entity.Actor, err error)
+	Update(ctx *context.Context, id int, body *entity.ActorUpdateBody) (err error)
+	Replace(ctx *context.Context, id int, body *entity.ActorReplaceBody) (err error)
 	Delete(ctx *context.Context, id int) (err error)
 	GetAll(ctx *context.Context) (actors []*entity.Actor, err error)
 }
@@ -69,7 +70,24 @@ func (h *ActorHandler) Replace() http.HandlerFunc {
 // Delete an actor by id.
 func (h *ActorHandler) Delete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotImplemented)
+		id, err := extractIDFromPath(r.URL.Path)
+		if err != nil {
+			returnError(w, http.StatusBadRequest, err)
+			return
+		}
+		ctx := context.Background()
+		err = h.actorUsecase.Delete(&ctx, id)
+		if err != nil {
+			switch err {
+			case repo.ErrActorNotFound:
+				returnError(w, http.StatusBadRequest, err)
+				return
+			default:
+				returnError(w, http.StatusInternalServerError, ErrServerError)
+				return
+			}
+		}
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 

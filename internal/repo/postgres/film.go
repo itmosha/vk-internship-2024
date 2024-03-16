@@ -44,6 +44,7 @@ func (r *FilmRepoPostgres) Insert(ctx *context.Context, receivedFilm *entity.Fil
 
 // Update provided fields of a Film by id.
 func (r *FilmRepoPostgres) Update(ctx *context.Context, id int, fields map[string]interface{}) (err error) {
+	// TODO: Use prepared statements
 	query := `UPDATE film SET id = id, `
 	values := make([]interface{}, 0)
 	idx := 1

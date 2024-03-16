@@ -10,7 +10,7 @@ import (
 // ActorRepo interface.
 type ActorRepoInterface interface {
 	Insert(ctx *context.Context, receivedActor *entity.Actor) (createdActor *entity.Actor, err error)
-	Update(ctx *context.Context, id int, fields map[string]interface{}) (updatedActor *entity.Actor, err error)
+	Update(ctx *context.Context, id int, fields map[string]interface{}) (err error)
 	Delete(ctx *context.Context, id int) (err error)
 	GetAll(ctx *context.Context) (actors []*entity.Actor, err error)
 }
@@ -40,14 +40,14 @@ func (uc *ActorUsecase) Create(ctx *context.Context, body *entity.ActorCreateBod
 }
 
 // Update an actor by id.
-func (uc *ActorUsecase) Update(ctx *context.Context, id int, body *entity.ActorUpdateBody) (actor *entity.Actor, err error) {
+func (uc *ActorUsecase) Update(ctx *context.Context, id int, body *entity.ActorUpdateBody) (err error) {
 
 	log.Panicln("not implemented")
 	return
 }
 
 // Replace an actor by id.
-func (uc *ActorUsecase) Replace(ctx *context.Context, id int, body *entity.ActorReplaceBody) (actor *entity.Actor, err error) {
+func (uc *ActorUsecase) Replace(ctx *context.Context, id int, body *entity.ActorReplaceBody) (err error) {
 
 	log.Panicln("not implemented")
 	return
@@ -55,8 +55,7 @@ func (uc *ActorUsecase) Replace(ctx *context.Context, id int, body *entity.Actor
 
 // Delete an actor by id.
 func (uc *ActorUsecase) Delete(ctx *context.Context, id int) (err error) {
-
-	log.Panicln("not implemented")
+	err = uc.actorRepo.Delete(ctx, id)
 	return
 }
 

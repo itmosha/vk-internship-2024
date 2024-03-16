@@ -36,7 +36,7 @@ func (r *ActorRepoPostgres) Insert(ctx *context.Context, receivedActor *entity.A
 }
 
 // Update provided fields of a Actor by id.
-func (r *ActorRepoPostgres) Update(context *context.Context, id int, fields map[string]interface{}) (updatedActor *entity.Actor, err error) {
+func (r *ActorRepoPostgres) Update(context *context.Context, id int, fields map[string]interface{}) (err error) {
 
 	log.Panicln("not implemented")
 	return
@@ -44,8 +44,21 @@ func (r *ActorRepoPostgres) Update(context *context.Context, id int, fields map[
 
 // Delete a Actor by id.
 func (r *ActorRepoPostgres) Delete(ctx *context.Context, id int) (err error) {
+	stmt, err := r.store.DB.PrepareContext(*ctx, `
+		DELETE FROM actor
+		WHERE id = $1;`)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
 
-	log.Panicln("not implemented")
+	res, err := stmt.ExecContext(*ctx, id)
+	if err != nil {
+		return
+	}
+	if cntRows, _ := res.RowsAffected(); cntRows == 0 {
+		err = ErrActorNotFound
+	}
 	return
 }
 
