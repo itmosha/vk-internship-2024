@@ -54,7 +54,6 @@ func (r *FilmRepoPostgres) Update(ctx *context.Context, id int, fields map[strin
 		idx++
 	}
 	query = query[:len(query)-2] + " WHERE id=$" + fmt.Sprint(idx)
-	fmt.Println(query)
 	values = append(values, id)
 
 	res, err := r.store.DB.ExecContext(*ctx, query, values...)

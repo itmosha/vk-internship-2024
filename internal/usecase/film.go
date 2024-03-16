@@ -104,6 +104,9 @@ func (uc *FilmUsecase) Update(ctx *context.Context, id int, body *entity.FilmUpd
 	if body.Rating != nil {
 		fields["rating"] = *body.Rating
 	}
+	if len(fields) == 0 {
+		return
+	}
 	err = uc.filmRepo.Update(ctx, id, fields)
 	if err != nil {
 		return
@@ -150,12 +153,12 @@ func (uc *FilmUsecase) Replace(ctx *context.Context, id int, body *entity.FilmRe
 		}
 		err = tx.Commit()
 	}()
-
-	fields := map[string]interface{}{}
-	fields["title"] = body.Title
-	fields["description"] = body.Description
-	fields["release_date"] = body.ReleaseDate
-	fields["rating"] = *body.Rating
+	fields := map[string]interface{}{
+		"title":        body.Title,
+		"description":  body.Description,
+		"release_date": body.ReleaseDate,
+		"rating":       *body.Rating,
+	}
 
 	err = uc.filmRepo.Update(ctx, id, fields)
 	if err != nil {

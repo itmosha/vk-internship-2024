@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/itmosha/vk-internship-2024/internal/entity"
@@ -35,14 +36,35 @@ func (r *ActorRepoPostgres) Insert(ctx *context.Context, receivedActor *entity.A
 	return
 }
 
-// Update provided fields of a Actor by id.
-func (r *ActorRepoPostgres) Update(context *context.Context, id int, fields map[string]interface{}) (err error) {
+// Update provided fields of an Actor by id.
+func (r *ActorRepoPostgres) Update(ctx *context.Context, id int, fields map[string]interface{}) (err error) {
+	// TODO: Use prepared statements
+	query := `UPDATE actor SET id = id, `
+	values := make([]interface{}, 0)
+	idx := 1
+	for field, value := range fields {
+		query += field + "=$" + fmt.Sprint(idx) + ", "
+		values = append(values, value)
+		idx++
+	}
+	query = query[:len(query)-2] + " WHERE id=$" + fmt.Sprint(idx)
+	values = append(values, id)
 
-	log.Panicln("not implemented")
+	res, err := r.store.DB.ExecContext(*ctx, query, values...)
+	if err != nil {
+		return
+	}
+	var cntRows int64
+	cntRows, err = res.RowsAffected()
+	if err != nil {
+		return
+	} else if cntRows == 0 {
+		err = ErrFilmNotFound
+	}
 	return
 }
 
-// Delete a Actor by id.
+// Delete an Actor by id.
 func (r *ActorRepoPostgres) Delete(ctx *context.Context, id int) (err error) {
 	stmt, err := r.store.DB.PrepareContext(*ctx, `
 		DELETE FROM actor

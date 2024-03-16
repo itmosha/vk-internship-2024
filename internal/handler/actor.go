@@ -56,14 +56,76 @@ func (h *ActorHandler) Create() http.HandlerFunc {
 // Update an actor by id.
 func (h *ActorHandler) Update() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotImplemented)
+		if isEmptyBody(r) {
+			returnError(w, http.StatusBadRequest, ErrEmptyBody)
+			return
+		}
+		id, err := extractIDFromPath(r.URL.Path)
+		if err != nil {
+			returnError(w, http.StatusBadRequest, err)
+			return
+		}
+		body, err := readBodyToStruct(r, &entity.ActorUpdateBody{})
+		if err != nil {
+			returnError(w, http.StatusBadRequest, err)
+			return
+		}
+		err = entity.ValidateActorUpdateBody(body)
+		if err != nil {
+			returnError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		ctx := context.Background()
+		err = h.actorUsecase.Update(&ctx, id, body)
+		if err != nil {
+			switch err {
+			case repo.ErrActorNotFound:
+				returnError(w, http.StatusBadRequest, err)
+				return
+			default:
+				returnError(w, http.StatusInternalServerError, ErrServerError)
+				return
+			}
+		}
 	}
 }
 
 // Replace an actor by id.
 func (h *ActorHandler) Replace() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotImplemented)
+		if isEmptyBody(r) {
+			returnError(w, http.StatusBadRequest, ErrEmptyBody)
+			return
+		}
+		id, err := extractIDFromPath(r.URL.Path)
+		if err != nil {
+			returnError(w, http.StatusBadRequest, err)
+			return
+		}
+		body, err := readBodyToStruct(r, &entity.ActorReplaceBody{})
+		if err != nil {
+			returnError(w, http.StatusBadRequest, err)
+			return
+		}
+		err = entity.ValidateActorReplaceBody(body)
+		if err != nil {
+			returnError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		ctx := context.Background()
+		err = h.actorUsecase.Replace(&ctx, id, body)
+		if err != nil {
+			switch err {
+			case repo.ErrActorNotFound:
+				returnError(w, http.StatusBadRequest, err)
+				return
+			default:
+				returnError(w, http.StatusInternalServerError, ErrServerError)
+				return
+			}
+		}
 	}
 }
 

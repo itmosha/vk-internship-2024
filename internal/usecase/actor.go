@@ -32,7 +32,7 @@ func NewActorUsecase(actorRepo ActorRepoInterface, filmActorRepo FilmsActorsRepo
 func (uc *ActorUsecase) Create(ctx *context.Context, body *entity.ActorCreateBody) (actor *entity.Actor, err error) {
 	actorToCreate := &entity.Actor{
 		Name:      body.Name,
-		Gender:    body.Gender,
+		Gender:    *body.Gender,
 		BirthDate: body.BirthDate,
 	}
 	actor, err = uc.actorRepo.Insert(ctx, actorToCreate)
@@ -41,15 +41,31 @@ func (uc *ActorUsecase) Create(ctx *context.Context, body *entity.ActorCreateBod
 
 // Update an actor by id.
 func (uc *ActorUsecase) Update(ctx *context.Context, id int, body *entity.ActorUpdateBody) (err error) {
-
-	log.Panicln("not implemented")
+	fields := map[string]interface{}{}
+	if len(body.Name) > 0 {
+		fields["name"] = body.Name
+	}
+	if body.Gender != nil {
+		fields["gender"] = *body.Gender
+	}
+	if len(body.BirthDate) > 0 {
+		fields["birth_date"] = body.BirthDate
+	}
+	if len(fields) == 0 {
+		return
+	}
+	err = uc.actorRepo.Update(ctx, id, fields)
 	return
 }
 
 // Replace an actor by id.
 func (uc *ActorUsecase) Replace(ctx *context.Context, id int, body *entity.ActorReplaceBody) (err error) {
-
-	log.Panicln("not implemented")
+	fields := map[string]interface{}{
+		"name":       body.Name,
+		"gender":     *body.Gender,
+		"birth_date": body.BirthDate,
+	}
+	err = uc.actorRepo.Update(ctx, id, fields)
 	return
 }
 
