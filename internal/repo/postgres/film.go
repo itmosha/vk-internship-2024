@@ -72,8 +72,21 @@ func (r *FilmRepoPostgres) Update(ctx *context.Context, id int, fields map[strin
 
 // Delete a Film by id.
 func (r *FilmRepoPostgres) Delete(ctx *context.Context, id int) (err error) {
+	stmt, err := r.store.DB.PrepareContext(*ctx, `
+		DELETE FROM film
+		WHERE id = $1;`)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
 
-	log.Panicln("not implemented")
+	res, err := stmt.ExecContext(*ctx, id)
+	if err != nil {
+		return
+	}
+	if cntRows, _ := res.RowsAffected(); cntRows == 0 {
+		err = ErrFilmNotFound
+	}
 	return
 }
 

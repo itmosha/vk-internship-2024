@@ -128,9 +128,7 @@ func (h *FilmHandler) Replace() http.HandlerFunc {
 
 		ctx := context.Background()
 		err = h.filmUsecase.Replace(&ctx, id, body)
-		fmt.Println(err)
 		if err != nil {
-			fmt.Println(err)
 			switch err {
 			case repo.ErrFilmNotFound:
 				returnError(w, http.StatusBadRequest, err)
@@ -149,7 +147,24 @@ func (h *FilmHandler) Replace() http.HandlerFunc {
 // Delete a film by id.
 func (h *FilmHandler) Delete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotImplemented)
+		id, err := extractIDFromPath(r.URL.Path)
+		if err != nil {
+			returnError(w, http.StatusBadRequest, err)
+			return
+		}
+		ctx := context.Background()
+		err = h.filmUsecase.Delete(&ctx, id)
+		if err != nil {
+			switch err {
+			case repo.ErrFilmNotFound:
+				returnError(w, http.StatusBadRequest, err)
+				return
+			default:
+				returnError(w, http.StatusInternalServerError, ErrServerError)
+				return
+			}
+		}
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 

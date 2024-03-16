@@ -191,8 +191,7 @@ func (uc *FilmUsecase) Replace(ctx *context.Context, id int, body *entity.FilmRe
 
 // Delete a film by id.
 func (uc *FilmUsecase) Delete(ctx *context.Context, id int) (err error) {
-
-	log.Panicln("not implemented")
+	err = uc.filmRepo.Delete(ctx, id)
 	return
 }
 
