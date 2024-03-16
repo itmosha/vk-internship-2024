@@ -92,6 +92,9 @@ func (h *FilmHandler) Update() http.HandlerFunc {
 			case repo.ErrFilmNotFound:
 				returnError(w, http.StatusBadRequest, err)
 				return
+			case repo.ErrActorNotFound:
+				returnError(w, http.StatusBadRequest, err)
+				return
 			default:
 				returnError(w, http.StatusInternalServerError, ErrServerError)
 				return
@@ -103,7 +106,43 @@ func (h *FilmHandler) Update() http.HandlerFunc {
 // Replace a film by id.
 func (h *FilmHandler) Replace() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotImplemented)
+		if isEmptyBody(r) {
+			returnError(w, http.StatusBadRequest, ErrEmptyBody)
+			return
+		}
+		id, err := extractIDFromPath(r.URL.Path)
+		if err != nil {
+			returnError(w, http.StatusBadRequest, err)
+			return
+		}
+		body, err := readBodyToStruct(r, &entity.FilmReplaceBody{})
+		if err != nil {
+			returnError(w, http.StatusBadRequest, err)
+			return
+		}
+		err = entity.ValidateFilmReplaceBody(body)
+		if err != nil {
+			returnError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		ctx := context.Background()
+		err = h.filmUsecase.Replace(&ctx, id, body)
+		fmt.Println(err)
+		if err != nil {
+			fmt.Println(err)
+			switch err {
+			case repo.ErrFilmNotFound:
+				returnError(w, http.StatusBadRequest, err)
+				return
+			case repo.ErrActorNotFound:
+				returnError(w, http.StatusBadRequest, err)
+				return
+			default:
+				returnError(w, http.StatusInternalServerError, ErrServerError)
+				return
+			}
+		}
 	}
 }
 

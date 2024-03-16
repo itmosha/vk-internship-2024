@@ -16,7 +16,7 @@ type FilmCreateBody struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	ReleaseDate string `json:"release_date"`
-	Rating      int    `json:"rating"`
+	Rating      *int   `json:"rating"`
 	ActorsIDs   []int  `json:"actors_ids"`
 }
 
@@ -31,7 +31,10 @@ func ValidateFilmCreateBody(body *FilmCreateBody) (err error) {
 	if err != nil {
 		return ErrInvalidFilmReleaseDate
 	}
-	if body.Rating < 0 || body.Rating > 10 {
+	// TODO: Refactor
+	if body.Rating == nil {
+		return ErrInvalidFilmRating
+	} else if *body.Rating < 0 || *body.Rating > 10 {
 		return ErrInvalidFilmRating
 	}
 	if len(body.ActorsIDs) == 0 {
@@ -46,6 +49,7 @@ type FilmUpdateBody struct {
 	Description string `json:"description"`
 	ReleaseDate string `json:"release_date"`
 	Rating      *int   `json:"rating"`
+	ActorsIDs   []int  `json:"actors_ids"`
 }
 
 func ValidateFilmUpdateBody(body *FilmUpdateBody) (err error) {
@@ -72,7 +76,31 @@ type FilmReplaceBody struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	ReleaseDate string `json:"release_date"`
-	Rating      int    `json:"rating"`
+	Rating      *int   `json:"rating"`
+	ActorsIDs   []int  `json:"actors_ids"`
+}
+
+func ValidateFilmReplaceBody(body *FilmReplaceBody) (err error) {
+	if len(body.Title) == 0 || len(body.Title) > 150 {
+		return ErrInvalidFilmTitleLength
+	}
+	if len(body.Description) > 1000 {
+		return ErrInvalidFilmDescriptionLength
+	}
+	_, err = time.Parse("01.02.2006", body.ReleaseDate)
+	if err != nil {
+		return ErrInvalidFilmReleaseDate
+	}
+	// TODO: Refactor
+	if body.Rating == nil {
+		return ErrInvalidFilmRating
+	} else if *body.Rating < 0 || *body.Rating > 10 {
+		return ErrInvalidFilmRating
+	}
+	if len(body.ActorsIDs) == 0 {
+		return ErrEmptyActorsIDs
+	}
+	return
 }
 
 // Film sort params.

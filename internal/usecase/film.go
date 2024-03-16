@@ -3,9 +3,11 @@ package usecase
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"log"
 
 	"github.com/itmosha/vk-internship-2024/internal/entity"
+	repo "github.com/itmosha/vk-internship-2024/internal/repo/postgres"
 )
 
 // FilmUsecase interface.
@@ -21,6 +23,7 @@ type FilmRepoInterface interface {
 type FilmsActorsRepoInterface interface {
 	Insert(ctx *context.Context, receivedFilmActor *entity.FilmActor) (createdFilmActor *entity.FilmActor, err error)
 	Delete(ctx *context.Context, filmID, actorID int) (err error)
+	SelectByFilmID(ctx *context.Context, filmID int) (filmsActors []*entity.FilmActor, err error)
 }
 
 type FilmUsecase struct {
@@ -56,7 +59,7 @@ func (uc *FilmUsecase) Create(ctx *context.Context, body *entity.FilmCreateBody)
 		Title:       body.Title,
 		Description: body.Description,
 		ReleaseDate: body.ReleaseDate,
-		Rating:      body.Rating,
+		Rating:      *body.Rating,
 	}
 	film, err = uc.filmRepo.Insert(ctx, filmToCreate)
 	if err != nil {
@@ -76,9 +79,19 @@ func (uc *FilmUsecase) Create(ctx *context.Context, body *entity.FilmCreateBody)
 
 // Update a film by id.
 func (uc *FilmUsecase) Update(ctx *context.Context, id int, body *entity.FilmUpdateBody) (err error) {
+	tx, err := uc.filmRepo.NewTransaction(ctx)
+	if err != nil {
+		return
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+			return
+		}
+		err = tx.Commit()
+	}()
 
 	fields := map[string]interface{}{}
-
 	if len(body.Title) > 0 {
 		fields["title"] = body.Title
 	}
@@ -92,13 +105,87 @@ func (uc *FilmUsecase) Update(ctx *context.Context, id int, body *entity.FilmUpd
 		fields["rating"] = *body.Rating
 	}
 	err = uc.filmRepo.Update(ctx, id, fields)
+	if err != nil {
+		return
+	}
+	if body.ActorsIDs != nil {
+		filmsActors, err_ := uc.filmsActorsRepo.SelectByFilmID(ctx, id)
+		if err_ != nil {
+			err = err_
+			return
+		}
+		for _, filmActor := range filmsActors {
+			err = uc.filmsActorsRepo.Delete(ctx, id, filmActor.ActorID)
+			if err != nil {
+				if errors.Is(err, repo.ErrFilmActorNotFound) {
+					err = nil
+				} else {
+					return
+				}
+			}
+		}
+		for _, actorID := range body.ActorsIDs {
+			_, err = uc.filmsActorsRepo.Insert(ctx, &entity.FilmActor{
+				FilmID:  id,
+				ActorID: actorID,
+			})
+			if err != nil {
+				return
+			}
+		}
+	}
 	return
 }
 
 // Replace a film by id.
 func (uc *FilmUsecase) Replace(ctx *context.Context, id int, body *entity.FilmReplaceBody) (err error) {
+	tx, err := uc.filmRepo.NewTransaction(ctx)
+	if err != nil {
+		return
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+			return
+		}
+		err = tx.Commit()
+	}()
 
-	log.Panicln("not implemented")
+	fields := map[string]interface{}{}
+	fields["title"] = body.Title
+	fields["description"] = body.Description
+	fields["release_date"] = body.ReleaseDate
+	fields["rating"] = *body.Rating
+
+	err = uc.filmRepo.Update(ctx, id, fields)
+	if err != nil {
+		return
+	}
+
+	filmsActors, err_ := uc.filmsActorsRepo.SelectByFilmID(ctx, id)
+	if err_ != nil {
+		err = err_
+		return
+	}
+	for _, filmActor := range filmsActors {
+		err = uc.filmsActorsRepo.Delete(ctx, id, filmActor.ActorID)
+		if err != nil {
+			if errors.Is(err, repo.ErrFilmActorNotFound) {
+				err = nil
+			} else {
+				return
+			}
+		}
+	}
+	for _, actorID := range body.ActorsIDs {
+		_, err = uc.filmsActorsRepo.Insert(ctx, &entity.FilmActor{
+			FilmID:  id,
+			ActorID: actorID,
+		})
+		if err != nil {
+			return
+		}
+	}
 	return
 }
 

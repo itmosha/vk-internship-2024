@@ -2,7 +2,6 @@ package repo
 
 import (
 	"context"
-	"log"
 
 	"github.com/itmosha/vk-internship-2024/internal/entity"
 	"github.com/itmosha/vk-internship-2024/pkg/postgres"
@@ -48,7 +47,43 @@ func (r *FilmsActorsRepoPostgres) Insert(ctx *context.Context, receivedFilmActor
 
 // Delete a FilmActor by film_id and actor_id.
 func (r *FilmsActorsRepoPostgres) Delete(ctx *context.Context, filmID, actorID int) (err error) {
+	stmt, err := r.store.DB.PrepareContext(*ctx, `
+		DELETE FROM films_actors
+		WHERE film_id = $1 AND actor_id = $2`)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
 
-	log.Panicln("not implemented")
+	res, err := stmt.ExecContext(*ctx, filmID, actorID)
+	if err != nil {
+		return
+	}
+	if cntRows, _ := res.RowsAffected(); cntRows == 0 {
+		err = ErrFilmActorNotFound
+	}
+	return
+}
+
+func (r *FilmsActorsRepoPostgres) SelectByFilmID(ctx *context.Context, filmID int) (filmsActors []*entity.FilmActor, err error) {
+	stmt, err := r.store.DB.PrepareContext(*ctx, `
+		SELECT film_id, actor_id
+		FROM films_actors
+		WHERE film_id = $1;`)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryContext(*ctx, filmID)
+
+	for rows.Next() {
+		filmActor := &entity.FilmActor{}
+		err = stmt.QueryRowContext(*ctx, filmID).Scan(&filmActor.FilmID, &filmActor.ActorID)
+		if err != nil {
+			return
+		}
+		filmsActors = append(filmsActors, filmActor)
+	}
 	return
 }
