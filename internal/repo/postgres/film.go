@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 
 	"github.com/itmosha/vk-internship-2024/internal/entity"
@@ -42,9 +43,30 @@ func (r *FilmRepoPostgres) Insert(ctx *context.Context, receivedFilm *entity.Fil
 }
 
 // Update provided fields of a Film by id.
-func (r *FilmRepoPostgres) Update(ctx *context.Context, id int, fields map[string]interface{}) (updatedFilm *entity.Film, err error) {
+func (r *FilmRepoPostgres) Update(ctx *context.Context, id int, fields map[string]interface{}) (err error) {
+	query := `UPDATE film SET id = id, `
+	values := make([]interface{}, 0)
+	idx := 1
+	for field, value := range fields {
+		query += field + "=$" + fmt.Sprint(idx) + ", "
+		values = append(values, value)
+		idx++
+	}
+	query = query[:len(query)-2] + " WHERE id=$" + fmt.Sprint(idx)
+	fmt.Println(query)
+	values = append(values, id)
 
-	log.Panicln("not implemented")
+	res, err := r.store.DB.ExecContext(*ctx, query, values...)
+	if err != nil {
+		return
+	}
+	var cntRows int64
+	cntRows, err = res.RowsAffected()
+	if err != nil {
+		return
+	} else if cntRows == 0 {
+		err = ErrFilmNotFound
+	}
 	return
 }
 

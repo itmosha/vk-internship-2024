@@ -12,7 +12,7 @@ import (
 type FilmRepoInterface interface {
 	NewTransaction(ctx *context.Context) (tx *sql.Tx, err error)
 	Insert(ctx *context.Context, receivedFilm *entity.Film) (createdFilm *entity.Film, err error)
-	Update(ctx *context.Context, id int, fields map[string]interface{}) (updatedFilm *entity.Film, err error)
+	Update(ctx *context.Context, id int, fields map[string]interface{}) (err error)
 	Delete(ctx *context.Context, id int) (err error)
 	GetAll(ctx *context.Context, sortParams *entity.FilmSortParams, searchFields map[string]interface{}) (films []*entity.Film, err error)
 }
@@ -75,14 +75,28 @@ func (uc *FilmUsecase) Create(ctx *context.Context, body *entity.FilmCreateBody)
 }
 
 // Update a film by id.
-func (uc *FilmUsecase) Update(ctx *context.Context, id int, body *entity.FilmUpdateBody) (film *entity.Film, err error) {
+func (uc *FilmUsecase) Update(ctx *context.Context, id int, body *entity.FilmUpdateBody) (err error) {
 
-	log.Panicln("not implemented")
+	fields := map[string]interface{}{}
+
+	if len(body.Title) > 0 {
+		fields["title"] = body.Title
+	}
+	if len(body.Description) > 0 {
+		fields["description"] = body.Description
+	}
+	if len(body.ReleaseDate) > 0 {
+		fields["release_date"] = body.ReleaseDate
+	}
+	if body.Rating != nil {
+		fields["rating"] = *body.Rating
+	}
+	err = uc.filmRepo.Update(ctx, id, fields)
 	return
 }
 
 // Replace a film by id.
-func (uc *FilmUsecase) Replace(ctx *context.Context, id int, body *entity.FilmReplaceBody) (film *entity.Film, err error) {
+func (uc *FilmUsecase) Replace(ctx *context.Context, id int, body *entity.FilmReplaceBody) (err error) {
 
 	log.Panicln("not implemented")
 	return

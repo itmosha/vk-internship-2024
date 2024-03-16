@@ -24,6 +24,9 @@ func ValidateFilmCreateBody(body *FilmCreateBody) (err error) {
 	if len(body.Title) == 0 || len(body.Title) > 150 {
 		return ErrInvalidFilmTitleLength
 	}
+	if len(body.Description) > 1000 {
+		return ErrInvalidFilmDescriptionLength
+	}
 	_, err = time.Parse("01.02.2006", body.ReleaseDate)
 	if err != nil {
 		return ErrInvalidFilmReleaseDate
@@ -42,7 +45,26 @@ type FilmUpdateBody struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	ReleaseDate string `json:"release_date"`
-	Rating      int    `json:"rating"`
+	Rating      *int   `json:"rating"`
+}
+
+func ValidateFilmUpdateBody(body *FilmUpdateBody) (err error) {
+	if len(body.Title) > 150 {
+		return ErrInvalidFilmTitleLength
+	}
+	if len(body.Description) > 1000 {
+		return ErrInvalidFilmDescriptionLength
+	}
+	if len(body.ReleaseDate) > 0 {
+		_, err = time.Parse("01.02.2006", body.ReleaseDate)
+		if err != nil {
+			return ErrInvalidFilmReleaseDate
+		}
+	}
+	if body.Rating != nil && (*body.Rating < 0 || *body.Rating > 10) {
+		return ErrInvalidFilmRating
+	}
+	return
 }
 
 // Film replace body.

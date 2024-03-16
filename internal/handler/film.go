@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/itmosha/vk-internship-2024/internal/entity"
@@ -11,8 +12,8 @@ import (
 
 type FilmUsecaseInterface interface {
 	Create(ctx *context.Context, body *entity.FilmCreateBody) (film *entity.Film, err error)
-	Update(ctx *context.Context, id int, body *entity.FilmUpdateBody) (film *entity.Film, err error)
-	Replace(ctx *context.Context, id int, body *entity.FilmReplaceBody) (film *entity.Film, err error)
+	Update(ctx *context.Context, id int, body *entity.FilmUpdateBody) (err error)
+	Replace(ctx *context.Context, id int, body *entity.FilmReplaceBody) (err error)
 	Delete(ctx *context.Context, id int) (err error)
 	GetAll(ctx *context.Context, sortParams *entity.FilmSortParams, searchFields map[string]interface{}) (films []*entity.Film, err error)
 }
@@ -63,7 +64,39 @@ func (h *FilmHandler) Create() http.HandlerFunc {
 // Update a film by id.
 func (h *FilmHandler) Update() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotImplemented)
+		if isEmptyBody(r) {
+			returnError(w, http.StatusBadRequest, ErrEmptyBody)
+			return
+		}
+		id, err := extractIDFromPath(r.URL.Path)
+		if err != nil {
+			returnError(w, http.StatusBadRequest, err)
+			return
+		}
+		body, err := readBodyToStruct(r, &entity.FilmUpdateBody{})
+		if err != nil {
+			returnError(w, http.StatusBadRequest, err)
+			return
+		}
+		err = entity.ValidateFilmUpdateBody(body)
+		if err != nil {
+			returnError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		ctx := context.Background()
+		err = h.filmUsecase.Update(&ctx, id, body)
+		if err != nil {
+			fmt.Println(err)
+			switch err {
+			case repo.ErrFilmNotFound:
+				returnError(w, http.StatusBadRequest, err)
+				return
+			default:
+				returnError(w, http.StatusInternalServerError, ErrServerError)
+				return
+			}
+		}
 	}
 }
 
