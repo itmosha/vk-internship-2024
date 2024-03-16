@@ -11,10 +11,10 @@ CREATE TABLE IF NOT EXISTS actor (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     gender BOOLEAN NOT NULL,
-    birthdate DATE NOT NULL
+    birth_date DATE NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS film_actor (
+CREATE TABLE IF NOT EXISTS films_actors (
     film_id INTEGER NOT NULL REFERENCES film(id) ON DELETE CASCADE,
     actor_id INTEGER NOT NULL REFERENCES actor(id) ON DELETE CASCADE,
     PRIMARY KEY (film_id, actor_id)

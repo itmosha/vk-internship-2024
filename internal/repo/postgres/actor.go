@@ -19,8 +19,19 @@ func NewActorRepoPostgres(store *postgres.Postgres) *ActorRepoPostgres {
 
 // Insert a new Actor with provided fields.
 func (r *ActorRepoPostgres) Insert(ctx *context.Context, receivedActor *entity.Actor) (createdActor *entity.Actor, err error) {
+	createdActor = &entity.Actor{}
+	stmt, err := r.store.DB.PrepareContext(*ctx, `
+		INSERT INTO actor (name, gender, birth_date)
+		VALUES ($1, $2, $3)
+		RETURNING id, name, gender, birth_date;
+	`)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
 
-	log.Panicln("not implemented")
+	err = stmt.QueryRowContext(*ctx, receivedActor.Name, receivedActor.Gender, receivedActor.BirthDate).
+		Scan(&createdActor.ID, &createdActor.Name, &createdActor.Gender, &createdActor.BirthDate)
 	return
 }
 

@@ -2,9 +2,11 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	"github.com/itmosha/vk-internship-2024/internal/entity"
+	repo "github.com/itmosha/vk-internship-2024/internal/repo/postgres"
 )
 
 type FilmUsecaseInterface interface {
@@ -27,7 +29,34 @@ func NewFilmHander(filmUsecase FilmUsecaseInterface) *FilmHandler {
 // Create a new film.
 func (h *FilmHandler) Create() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotImplemented)
+		if isEmptyBody(r) {
+			returnError(w, http.StatusBadRequest, ErrEmptyBody)
+			return
+		}
+		body, err := readBodyToStruct(r, &entity.FilmCreateBody{})
+		if err != nil {
+			returnError(w, http.StatusBadRequest, err)
+			return
+		}
+		err = entity.ValidateFilmCreateBody(body)
+		if err != nil {
+			returnError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		ctx := context.Background()
+		film, err := h.filmUsecase.Create(&ctx, body)
+		if err != nil {
+			switch err {
+			case repo.ErrActorNotFound:
+				returnError(w, http.StatusBadRequest, err)
+				return
+			default:
+				returnError(w, http.StatusInternalServerError, ErrServerError)
+				return
+			}
+		}
+		json.NewEncoder(w).Encode(film)
 	}
 }
 

@@ -22,11 +22,11 @@ func Run(cfg *config.Config) {
 	// Create repos
 	filmRepo := repo.NewFilmRepoPostgres(pg)
 	actorRepo := repo.NewActorRepoPostgres(pg)
-	filmActorRepo := repo.NewFilmActorRepoPostgres(pg)
+	filmsActorsRepo := repo.NewFilmsActorsRepoPostgres(pg)
 
 	// Create usecases
-	filmUsecase := usecase.NewFilmUsecase(filmRepo, actorRepo, filmActorRepo)
-	actorUsecase := usecase.NewActorUsecase(actorRepo, filmActorRepo)
+	filmUsecase := usecase.NewFilmUsecase(filmRepo, actorRepo, filmsActorsRepo)
+	actorUsecase := usecase.NewActorUsecase(actorRepo, filmsActorsRepo)
 
 	// Create handlers
 	filmHandler := handler.NewFilmHander(filmUsecase)

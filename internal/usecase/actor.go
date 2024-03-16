@@ -17,11 +17,11 @@ type ActorRepoInterface interface {
 
 type ActorUsecase struct {
 	actorRepo     ActorRepoInterface
-	filmActorRepo FilmActorRepoInterface
+	filmActorRepo FilmsActorsRepoInterface
 }
 
 // Create new ActorUsecase.
-func NewActorUsecase(actorRepo ActorRepoInterface, filmActorRepo FilmActorRepoInterface) *ActorUsecase {
+func NewActorUsecase(actorRepo ActorRepoInterface, filmActorRepo FilmsActorsRepoInterface) *ActorUsecase {
 	return &ActorUsecase{
 		actorRepo:     actorRepo,
 		filmActorRepo: filmActorRepo,
@@ -30,8 +30,12 @@ func NewActorUsecase(actorRepo ActorRepoInterface, filmActorRepo FilmActorRepoIn
 
 // Create a new actor.
 func (uc *ActorUsecase) Create(ctx *context.Context, body *entity.ActorCreateBody) (actor *entity.Actor, err error) {
-
-	log.Panicln("not implemented")
+	actorToCreate := &entity.Actor{
+		Name:      body.Name,
+		Gender:    body.Gender,
+		BirthDate: body.BirthDate,
+	}
+	actor, err = uc.actorRepo.Insert(ctx, actorToCreate)
 	return
 }
 

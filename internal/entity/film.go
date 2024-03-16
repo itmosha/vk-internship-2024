@@ -1,5 +1,7 @@
 package entity
 
+import "time"
+
 // Film entity.
 type Film struct {
 	ID          int    `json:"id"`
@@ -11,10 +13,28 @@ type Film struct {
 
 // Film create body.
 type FilmCreateBody struct {
-	Title       string `json:"title" binding:"required"`
+	Title       string `json:"title"`
 	Description string `json:"description"`
-	ReleaseDate string `json:"release_date" binding:"required"`
+	ReleaseDate string `json:"release_date"`
 	Rating      int    `json:"rating"`
+	ActorsIDs   []int  `json:"actors_ids"`
+}
+
+func ValidateFilmCreateBody(body *FilmCreateBody) (err error) {
+	if len(body.Title) == 0 || len(body.Title) > 150 {
+		return ErrInvalidFilmTitleLength
+	}
+	_, err = time.Parse("01.02.2006", body.ReleaseDate)
+	if err != nil {
+		return ErrInvalidFilmReleaseDate
+	}
+	if body.Rating < 0 || body.Rating > 10 {
+		return ErrInvalidFilmRating
+	}
+	if len(body.ActorsIDs) == 0 {
+		return ErrEmptyActorsIDs
+	}
+	return
 }
 
 // Film update body.
@@ -27,9 +47,9 @@ type FilmUpdateBody struct {
 
 // Film replace body.
 type FilmReplaceBody struct {
-	Title       string `json:"title" binding:"required"`
+	Title       string `json:"title"`
 	Description string `json:"description"`
-	ReleaseDate string `json:"release_date" binding:"required"`
+	ReleaseDate string `json:"release_date"`
 	Rating      int    `json:"rating"`
 }
 

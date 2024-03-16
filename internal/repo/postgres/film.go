@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"database/sql"
 	"log"
 
 	"github.com/itmosha/vk-internship-2024/internal/entity"
@@ -17,10 +18,26 @@ func NewFilmRepoPostgres(store *postgres.Postgres) *FilmRepoPostgres {
 	return &FilmRepoPostgres{store}
 }
 
+// Start a new transaction.
+func (r *FilmRepoPostgres) NewTransaction(ctx *context.Context) (tx *sql.Tx, err error) {
+	return r.store.DB.BeginTx(*ctx, nil)
+}
+
 // Insert a new Film with provided fields.
 func (r *FilmRepoPostgres) Insert(ctx *context.Context, receivedFilm *entity.Film) (createdFilm *entity.Film, err error) {
+	createdFilm = &entity.Film{}
+	stmt, err := r.store.DB.PrepareContext(*ctx, `
+		INSERT INTO film (title, description, release_date, rating)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, title, description, release_date, rating;
+	`)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
 
-	log.Panicln("not implemented")
+	err = stmt.QueryRowContext(*ctx, receivedFilm.Title, receivedFilm.Description, receivedFilm.ReleaseDate, receivedFilm.Rating).
+		Scan(&createdFilm.ID, &createdFilm.Title, &createdFilm.Description, &createdFilm.ReleaseDate, &createdFilm.Rating)
 	return
 }
 

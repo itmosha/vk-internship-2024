@@ -1,4 +1,4 @@
 
-DROP TABLE IF EXISTS film_actor;
+DROP TABLE IF EXISTS films_actors;
 DROP TABLE IF EXISTS actor;
 DROP TABLE IF EXISTS film;

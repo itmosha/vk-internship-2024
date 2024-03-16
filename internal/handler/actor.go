@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	"github.com/itmosha/vk-internship-2024/internal/entity"
@@ -26,7 +27,28 @@ func NewActorHandler(actorUsecase ActorUsecaseInterface) *ActorHandler {
 // Create a new actor.
 func (h *ActorHandler) Create() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotImplemented)
+		if isEmptyBody(r) {
+			returnError(w, http.StatusBadRequest, ErrEmptyBody)
+			return
+		}
+		body, err := readBodyToStruct(r, &entity.ActorCreateBody{})
+		if err != nil {
+			returnError(w, http.StatusBadRequest, err)
+			return
+		}
+		err = entity.ValidateActorCreateBody(body)
+		if err != nil {
+			returnError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		ctx := context.Background()
+		actor, err := h.actorUsecase.Create(&ctx, body)
+		if err != nil {
+			returnError(w, http.StatusInternalServerError, ErrServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(actor)
 	}
 }
 
