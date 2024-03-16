@@ -1,0 +1,21 @@
+
+CREATE TABLE IF NOT EXISTS film (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(150) NOT NULL,
+    description VARCHAR(1000) NOT NULL DEFAULT '',
+    release_date DATE NOT NULL,
+    rating INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS actor (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    gender BOOLEAN NOT NULL,
+    birthdate DATE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS film_actor (
+    film_id INTEGER NOT NULL REFERENCES film(id) ON DELETE CASCADE,
+    actor_id INTEGER NOT NULL REFERENCES actor(id) ON DELETE CASCADE,
+    PRIMARY KEY (film_id, actor_id)
+);
