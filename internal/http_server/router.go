@@ -21,7 +21,7 @@ type ActorHandlerInterface interface {
 	Update() http.HandlerFunc
 	Replace() http.HandlerFunc
 	Delete() http.HandlerFunc
-	GetAll() http.HandlerFunc
+	GetAllWithFilms() http.HandlerFunc
 }
 
 // Router struct.
@@ -50,7 +50,7 @@ func NewRouter(filmHandler FilmHandlerInterface, actorHandler ActorHandlerInterf
 	router.HandleFunc("/api/actors/{id}/", http.MethodPatch, actorHandler.Update())
 	router.HandleFunc("/api/actors/{id}/", http.MethodPut, actorHandler.Replace())
 	router.HandleFunc("/api/actors/{id}", http.MethodDelete, actorHandler.Delete())
-	router.HandleFunc("/api/actors", http.MethodGet, actorHandler.GetAll())
+	router.HandleFunc("/api/actors", http.MethodGet, actorHandler.GetAllWithFilms())
 	return
 }
 

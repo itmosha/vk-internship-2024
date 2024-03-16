@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/itmosha/vk-internship-2024/internal/entity"
@@ -14,7 +15,7 @@ type ActorUsecaseInterface interface {
 	Update(ctx *context.Context, id int, body *entity.ActorUpdateBody) (err error)
 	Replace(ctx *context.Context, id int, body *entity.ActorReplaceBody) (err error)
 	Delete(ctx *context.Context, id int) (err error)
-	GetAll(ctx *context.Context) (actors []*entity.Actor, err error)
+	GetAllWithFilms(ctx *context.Context) (actors []*entity.ActorWithFilms, err error)
 }
 
 type ActorHandler struct {
@@ -154,8 +155,15 @@ func (h *ActorHandler) Delete() http.HandlerFunc {
 }
 
 // Get all actors.
-func (h *ActorHandler) GetAll() http.HandlerFunc {
+func (h *ActorHandler) GetAllWithFilms() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotImplemented)
+		ctx := context.Background()
+		actors, err := h.actorUsecase.GetAllWithFilms(&ctx)
+		if err != nil {
+			fmt.Println(err)
+			returnError(w, http.StatusInternalServerError, ErrServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(actors)
 	}
 }

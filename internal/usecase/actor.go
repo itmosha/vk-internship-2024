@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"log"
 
 	"github.com/itmosha/vk-internship-2024/internal/entity"
 )
@@ -12,7 +11,7 @@ type ActorRepoInterface interface {
 	Insert(ctx *context.Context, receivedActor *entity.Actor) (createdActor *entity.Actor, err error)
 	Update(ctx *context.Context, id int, fields map[string]interface{}) (err error)
 	Delete(ctx *context.Context, id int) (err error)
-	GetAll(ctx *context.Context) (actors []*entity.Actor, err error)
+	GetAllWithFilms(ctx *context.Context) (actors []*entity.ActorWithFilms, err error)
 }
 
 type ActorUsecase struct {
@@ -76,8 +75,7 @@ func (uc *ActorUsecase) Delete(ctx *context.Context, id int) (err error) {
 }
 
 // Get all actors.
-func (uc *ActorUsecase) GetAll(ctx *context.Context) (actors []*entity.Actor, err error) {
-
-	log.Panicln("not implemented")
+func (uc *ActorUsecase) GetAllWithFilms(ctx *context.Context) (actors []*entity.ActorWithFilms, err error) {
+	actors, err = uc.actorRepo.GetAllWithFilms(ctx)
 	return
 }

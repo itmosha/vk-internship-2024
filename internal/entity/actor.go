@@ -10,6 +10,16 @@ type Actor struct {
 	BirthDate string `json:"birth_date"`
 }
 
+// Actor with all films' ids where actor is present.
+// This struct is used in the API response.
+type ActorWithFilms struct {
+	ID        int    `json:"id"`
+	Name      string `json:"name"`
+	Gender    bool   `json:"gender"`
+	BirthDate string `json:"birth_date"`
+	FilmsIDs  []int  `json:"films_ids"`
+}
+
 // Actor create body.
 type ActorCreateBody struct {
 	Name      string `json:"name"`

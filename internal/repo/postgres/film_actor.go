@@ -87,3 +87,26 @@ func (r *FilmsActorsRepoPostgres) SelectByFilmID(ctx *context.Context, filmID in
 	}
 	return
 }
+
+func (r *FilmsActorsRepoPostgres) SelectByActorID(ctx *context.Context, actorID int) (filmsActors []*entity.FilmActor, err error) {
+	stmt, err := r.store.DB.PrepareContext(*ctx, `
+		SELECT film_id, actor_id
+		FROM films_actors
+		WHERE actor_id = $1;`)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryContext(*ctx, actorID)
+
+	for rows.Next() {
+		filmActor := &entity.FilmActor{}
+		err = stmt.QueryRowContext(*ctx, actorID).Scan(&filmActor.FilmID, &filmActor.ActorID)
+		if err != nil {
+			return
+		}
+		filmsActors = append(filmsActors, filmActor)
+	}
+	return
+}

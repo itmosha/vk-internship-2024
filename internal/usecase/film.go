@@ -24,6 +24,7 @@ type FilmsActorsRepoInterface interface {
 	Insert(ctx *context.Context, receivedFilmActor *entity.FilmActor) (createdFilmActor *entity.FilmActor, err error)
 	Delete(ctx *context.Context, filmID, actorID int) (err error)
 	SelectByFilmID(ctx *context.Context, filmID int) (filmsActors []*entity.FilmActor, err error)
+	SelectByActorID(ctx *context.Context, actorID int) (filmsActors []*entity.FilmActor, err error)
 }
 
 type FilmUsecase struct {

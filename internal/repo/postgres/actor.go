@@ -3,7 +3,8 @@ package repo
 import (
 	"context"
 	"fmt"
-	"log"
+	"strconv"
+	"strings"
 
 	"github.com/itmosha/vk-internship-2024/internal/entity"
 	"github.com/itmosha/vk-internship-2024/pkg/postgres"
@@ -59,7 +60,7 @@ func (r *ActorRepoPostgres) Update(ctx *context.Context, id int, fields map[stri
 	if err != nil {
 		return
 	} else if cntRows == 0 {
-		err = ErrFilmNotFound
+		err = ErrActorNotFound
 	}
 	return
 }
@@ -85,8 +86,44 @@ func (r *ActorRepoPostgres) Delete(ctx *context.Context, id int) (err error) {
 }
 
 // Get all Actors.
-func (r *ActorRepoPostgres) GetAll(ctx *context.Context) (actors []*entity.Actor, err error) {
+func (r *ActorRepoPostgres) GetAllWithFilms(ctx *context.Context) (actors []*entity.ActorWithFilms, err error) {
+	stmt, err := r.store.DB.PrepareContext(*ctx, `
+		SELECT a.id, a.name, a.gender, a.birth_date, ARRAY_AGG(f.id) AS films_ids
+		FROM actor a
+		LEFT JOIN films_actors fa ON a.id = fa.actor_id
+		LEFT JOIN film f ON fa.film_id = f.id
+		GROUP BY a.id;`)
 
-	log.Panicln("not implemented")
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryContext(*ctx)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		actor := &entity.ActorWithFilms{}
+		var filmsIDsRaw []byte
+		err = rows.Scan(&actor.ID, &actor.Name, &actor.Gender, &actor.BirthDate, &filmsIDsRaw)
+		if err != nil {
+			return
+		}
+		// TODO: Refactor this
+		filmsIDsStr := string(filmsIDsRaw)
+		if filmsIDsStr == "{NULL}" {
+			actor.FilmsIDs = []int{}
+		} else {
+			filmsIDsStr = strings.Trim(filmsIDsStr, "{}")
+			filmsIDsStrSlice := strings.Split(filmsIDsStr, ",")
+			filmsIDs := make([]int, len(filmsIDsStrSlice))
+			for i, idStr := range filmsIDsStrSlice {
+				filmsIDs[i], _ = strconv.Atoi(idStr)
+			}
+			actor.FilmsIDs = filmsIDs
+		}
+		actors = append(actors, actor)
+	}
 	return
 }
