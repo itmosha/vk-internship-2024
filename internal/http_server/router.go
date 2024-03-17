@@ -2,8 +2,12 @@ package http_server
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
+
+	jwtfuncs "github.com/itmosha/vk-internship-2024/pkg/jwt_funcs"
 )
 
 // Film handler interface.
@@ -30,6 +34,13 @@ type UserHandlerInterface interface {
 	Login() http.HandlerFunc
 }
 
+var (
+	ErrAccessTokenNotProvided = errors.New("access token not provided")
+	ErrInvalidAccessToken     = errors.New("invalid access token")
+	ErrAccessTokenExpired     = errors.New("access token expired")
+	ErrNotEnoughPermissions   = errors.New("not enough permissions")
+)
+
 // Router struct.
 type Router struct {
 	routes map[string]map[string]http.HandlerFunc
@@ -45,18 +56,18 @@ func NewRouter(filmHandler FilmHandlerInterface, actorHandler ActorHandlerInterf
 	})
 
 	// Film endpoints
-	router.HandleFunc("/api/films/", http.MethodPost, filmHandler.Create())
-	router.HandleFunc("/api/films/{id}/", http.MethodPatch, filmHandler.Update())
-	router.HandleFunc("/api/films/{id}/", http.MethodPut, filmHandler.Replace())
-	router.HandleFunc("/api/films/{id}", http.MethodDelete, filmHandler.Delete())
-	router.HandleFunc("/api/films", http.MethodGet, filmHandler.GetAll())
+	router.HandleFunc("/api/films/", http.MethodPost, AuthMiddleware(true, filmHandler.Create()))
+	router.HandleFunc("/api/films/{id}/", http.MethodPatch, AuthMiddleware(true, filmHandler.Update()))
+	router.HandleFunc("/api/films/{id}/", http.MethodPut, AuthMiddleware(true, filmHandler.Replace()))
+	router.HandleFunc("/api/films/{id}", http.MethodDelete, AuthMiddleware(true, filmHandler.Delete()))
+	router.HandleFunc("/api/films", http.MethodGet, AuthMiddleware(false, filmHandler.GetAll()))
 
 	// Actor endpoints
-	router.HandleFunc("/api/actors/", http.MethodPost, actorHandler.Create())
-	router.HandleFunc("/api/actors/{id}/", http.MethodPatch, actorHandler.Update())
-	router.HandleFunc("/api/actors/{id}/", http.MethodPut, actorHandler.Replace())
-	router.HandleFunc("/api/actors/{id}", http.MethodDelete, actorHandler.Delete())
-	router.HandleFunc("/api/actors", http.MethodGet, actorHandler.GetAllWithFilms())
+	router.HandleFunc("/api/actors/", http.MethodPost, AuthMiddleware(true, actorHandler.Create()))
+	router.HandleFunc("/api/actors/{id}/", http.MethodPatch, AuthMiddleware(true, actorHandler.Update()))
+	router.HandleFunc("/api/actors/{id}/", http.MethodPut, AuthMiddleware(true, actorHandler.Replace()))
+	router.HandleFunc("/api/actors/{id}", http.MethodDelete, AuthMiddleware(true, actorHandler.Delete()))
+	router.HandleFunc("/api/actors", http.MethodGet, AuthMiddleware(false, actorHandler.GetAllWithFilms()))
 
 	// User endpoints
 	router.HandleFunc("/api/auth/register/", http.MethodPost, userHandler.Register())
@@ -114,6 +125,45 @@ func pathMatch(registeredPath, reqPath string) (bool, map[string]string) {
 		}
 	}
 	return true, params
+}
+
+// AuthMiddleware is a middleware to check authorization.
+func AuthMiddleware(isAdminRequred bool, next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		accessToken := extractTokenFromHeader(req.Header.Get("Authorization"))
+		if accessToken == "" {
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]string{"message": ErrAccessTokenNotProvided.Error()})
+			return
+		}
+
+		claims, isExpired, err := jwtfuncs.ExtractAccessTokenClaims(accessToken)
+		if err != nil {
+			w.WriteHeader(http.StatusForbidden)
+			json.NewEncoder(w).Encode(map[string]string{"message": ErrInvalidAccessToken.Error()})
+			return
+		}
+		if isExpired {
+			w.WriteHeader(http.StatusForbidden)
+			json.NewEncoder(w).Encode(map[string]string{"message": ErrAccessTokenExpired.Error()})
+			return
+		}
+		if isAdminRequred && !claims.IsAdmin {
+			w.WriteHeader(http.StatusForbidden)
+			json.NewEncoder(w).Encode(map[string]string{"message": ErrNotEnoughPermissions.Error()})
+			return
+		}
+		next.ServeHTTP(w, req)
+	}
+}
+
+// Extract token from "Authorization" header.
+func extractTokenFromHeader(header string) string {
+	parts := strings.Split(header, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return ""
+	}
+	return parts[1]
 }
 
 // Add a value to request context.
