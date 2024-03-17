@@ -15,7 +15,7 @@ type FilmUsecaseInterface interface {
 	Update(ctx *context.Context, id int, body *entity.FilmUpdateBody) (err error)
 	Replace(ctx *context.Context, id int, body *entity.FilmReplaceBody) (err error)
 	Delete(ctx *context.Context, id int) (err error)
-	GetAll(ctx *context.Context, sortParams *entity.FilmSortParams, searchFields map[string]interface{}) (films []*entity.Film, err error)
+	GetAll(ctx *context.Context, sortParams *entity.FilmSortParams, searchFields *entity.FilmSearchParams) (films []*entity.FilmWithActors, err error)
 }
 
 type FilmHandler struct {
@@ -171,6 +171,40 @@ func (h *FilmHandler) Delete() http.HandlerFunc {
 // Get all films.
 func (h *FilmHandler) GetAll() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotImplemented)
+		query := r.URL.Query()
+		sortField := query.Get("sort_by")
+		if sortField == "" {
+			sortField = entity.FilmDefaultSortField
+		} else if !entity.IsValidParam("sort_field", sortField) {
+			returnError(w, http.StatusBadRequest, ErrInvalidSortByParam)
+			return
+		}
+		sortOrder := query.Get("order")
+		if sortOrder == "" {
+			sortOrder = entity.FilmDefaultSortOrder
+		} else if !entity.IsValidParam("sort_order", sortOrder) {
+			returnError(w, http.StatusBadRequest, ErrInvalidOrderParam)
+			return
+		}
+		sortParams := &entity.FilmSortParams{
+			Field: sortField,
+			Order: sortOrder,
+		}
+		// TODO: Refactor this (use FilmSearchFields)
+		searchParams := &entity.FilmSearchParams{
+			Title:     query.Get("title"),
+			ActorName: query.Get("actor_name"),
+		}
+		ctx := context.Background()
+		films, err := h.filmUsecase.GetAll(&ctx, sortParams, searchParams)
+		if err != nil {
+			fmt.Println(err)
+			switch err {
+			default:
+				returnError(w, http.StatusInternalServerError, ErrServerError)
+				return
+			}
+		}
+		json.NewEncoder(w).Encode(films)
 	}
 }

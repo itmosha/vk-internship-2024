@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"log"
 
 	"github.com/itmosha/vk-internship-2024/internal/entity"
 	repo "github.com/itmosha/vk-internship-2024/internal/repo/postgres"
@@ -16,7 +15,7 @@ type FilmRepoInterface interface {
 	Insert(ctx *context.Context, receivedFilm *entity.Film) (createdFilm *entity.Film, err error)
 	Update(ctx *context.Context, id int, fields map[string]interface{}) (err error)
 	Delete(ctx *context.Context, id int) (err error)
-	GetAll(ctx *context.Context, sortParams *entity.FilmSortParams, searchFields map[string]interface{}) (films []*entity.Film, err error)
+	GetAllWithActors(ctx *context.Context, sortParams *entity.FilmSortParams, searchFields *entity.FilmSearchParams) (films []*entity.FilmWithActors, err error)
 }
 
 // FilmActorRepo interface.
@@ -200,8 +199,7 @@ func (uc *FilmUsecase) Delete(ctx *context.Context, id int) (err error) {
 }
 
 // Get all films.
-func (uc *FilmUsecase) GetAll(ctx *context.Context, sortParams *entity.FilmSortParams, searchFields map[string]interface{}) (films []*entity.Film, err error) {
-
-	log.Panicln("not implemented")
+func (uc *FilmUsecase) GetAll(ctx *context.Context, sortParams *entity.FilmSortParams, searchFields *entity.FilmSearchParams) (films []*entity.FilmWithActors, err error) {
+	films, err = uc.filmRepo.GetAllWithActors(ctx, sortParams, searchFields)
 	return
 }

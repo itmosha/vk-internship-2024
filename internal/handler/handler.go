@@ -13,6 +13,10 @@ var (
 	ErrDecodeBody           = errors.New("could not decode request body")
 	ErrEmptyBody            = errors.New("empty request body")
 
+	ErrInvalidSortByParam   = errors.New("invalid sort_by query parameter, should be one of: title, rating, release_date")
+	ErrInvalidOrderParam    = errors.New("invalid order query parameter, should be one of: asc, desc")
+	ErrInvalidSearchByParam = errors.New("invalid search_by query parameter, should be one of: title, actor_name")
+
 	ErrServerError = errors.New("internal server error")
 )
 
