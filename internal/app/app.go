@@ -23,17 +23,20 @@ func Run(cfg *config.Config) {
 	filmRepo := repo.NewFilmRepoPostgres(pg)
 	actorRepo := repo.NewActorRepoPostgres(pg)
 	filmsActorsRepo := repo.NewFilmsActorsRepoPostgres(pg)
+	userRepo := repo.NewUserRepoPostgres(pg)
 
 	// Create usecases
 	filmUsecase := usecase.NewFilmUsecase(filmRepo, actorRepo, filmsActorsRepo)
 	actorUsecase := usecase.NewActorUsecase(actorRepo, filmsActorsRepo)
+	userUsecase := usecase.NewUserUsecase(userRepo)
 
 	// Create handlers
 	filmHandler := handler.NewFilmHander(filmUsecase)
 	actorHandler := handler.NewActorHandler(actorUsecase)
+	userHandler := handler.NewUserHandler(userUsecase)
 
 	// Setup router
-	router := http_server.NewRouter(filmHandler, actorHandler)
+	router := http_server.NewRouter(filmHandler, actorHandler, userHandler)
 
 	// Run server
 	s := &http.Server{

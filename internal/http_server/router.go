@@ -24,13 +24,19 @@ type ActorHandlerInterface interface {
 	GetAllWithFilms() http.HandlerFunc
 }
 
+// User handler interface.
+type UserHandlerInterface interface {
+	Register() http.HandlerFunc
+	Login() http.HandlerFunc
+}
+
 // Router struct.
 type Router struct {
 	routes map[string]map[string]http.HandlerFunc
 }
 
 // Create new Router.
-func NewRouter(filmHandler FilmHandlerInterface, actorHandler ActorHandlerInterface) (router *Router) {
+func NewRouter(filmHandler FilmHandlerInterface, actorHandler ActorHandlerInterface, userHandler UserHandlerInterface) (router *Router) {
 	router = &Router{routes: make(map[string]map[string]http.HandlerFunc)}
 
 	// Ping endpoint
@@ -51,6 +57,10 @@ func NewRouter(filmHandler FilmHandlerInterface, actorHandler ActorHandlerInterf
 	router.HandleFunc("/api/actors/{id}/", http.MethodPut, actorHandler.Replace())
 	router.HandleFunc("/api/actors/{id}", http.MethodDelete, actorHandler.Delete())
 	router.HandleFunc("/api/actors", http.MethodGet, actorHandler.GetAllWithFilms())
+
+	// User endpoints
+	router.HandleFunc("/api/auth/register/", http.MethodPost, userHandler.Register())
+	router.HandleFunc("/api/auth/login/", http.MethodPost, userHandler.Login())
 	return
 }
 

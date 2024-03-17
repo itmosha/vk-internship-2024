@@ -11,5 +11,8 @@ var (
 	ErrInvalidFilmDescriptionLength = errors.New("invalid length of description field, must be of length 1 to 1000")
 	ErrInvalidFilmReleaseDate       = errors.New("invalid format of release_date field, must be in format 01.02.2006")
 	ErrInvalidFilmRating            = errors.New("invalid value of rating field, must be in range 0 to 10")
-	ErrEmptyActorsIDs               = errors.New("empty actors_ids array provided")
+
+	ErrInvalidUsernameLength = errors.New("invalid length of username field, must be of length 1 to 100")
+
+	ErrEmptyActorsIDs = errors.New("empty actors_ids array provided")
 )
