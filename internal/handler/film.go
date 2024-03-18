@@ -29,7 +29,16 @@ func NewFilmHander(filmUsecase FilmUsecaseInterface, logger *logger.Logger) *Fil
 	return &FilmHandler{filmUsecase, logger}
 }
 
-// Create a new film.
+// @Title Create film
+// @Description Create a new film.
+// @Param body body entity.FilmCreateBody true "Create film body"
+// @Success 201 {object} entity.Film
+// @Failure 400 {object} RequestError
+// @Failure 401 {object} RequestError
+// @Failure 403 {object} RequestError
+// @Failure 500 {object} RequestError
+// @Resource Films
+// @Route /api/films/ [post]
 func (h *FilmHandler) Create() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if isEmptyBody(r) {
@@ -69,7 +78,17 @@ func (h *FilmHandler) Create() http.HandlerFunc {
 	}
 }
 
-// Update a film by id.
+// @Title Update film
+// @Description Update a film by id.
+// @Param id path integer true "Film ID"
+// @Param body body entity.FilmUpdateBody true "Update film body"
+// @Success 200 {}
+// @Failure 400 {object} RequestError
+// @Failure 401 {object} RequestError
+// @Failure 403 {object} RequestError
+// @Failure 500 {object} RequestError
+// @Resource Films
+// @Route /api/films/{id}/ [patch]
 func (h *FilmHandler) Update() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if isEmptyBody(r) {
@@ -117,7 +136,17 @@ func (h *FilmHandler) Update() http.HandlerFunc {
 	}
 }
 
-// Replace a film by id.
+// @Title Replace film
+// @Description Replace a film by id.
+// @Param id path integer true "Film ID"
+// @Param body body entity.FilmReplaceBody true "Replace film body"
+// @Success 200 {}
+// @Failure 400 {object} RequestError
+// @Failure 401 {object} RequestError
+// @Failure 403 {object} RequestError
+// @Failure 500 {object} RequestError
+// @Resource Films
+// @Route /api/films/{id}/ [put]
 func (h *FilmHandler) Replace() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if isEmptyBody(r) {
@@ -164,7 +193,16 @@ func (h *FilmHandler) Replace() http.HandlerFunc {
 	}
 }
 
-// Delete a film by id.
+// @Title Delete film
+// @Description Delete a film by id.
+// @Param id path integer true "Film ID"
+// @Success 204 {}
+// @Failure 400 {object} RequestError
+// @Failure 401 {object} RequestError
+// @Failure 403 {object} RequestError
+// @Failure 500 {object} RequestError
+// @Resource Films
+// @Route /api/films/{id} [delete]
 func (h *FilmHandler) Delete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := extractIDFromPath(r.URL.Path)
@@ -191,7 +229,17 @@ func (h *FilmHandler) Delete() http.HandlerFunc {
 	}
 }
 
-// Get all films.
+// @Title Get all films
+// @Description Get all films with seaching and sorting params.
+// @Param sort_by query string true "Sort by field" Enums(title,rating,release_date)
+// @Param sort_order query string true "Sort order" Enums(asc,desc)
+// @Param title query string true "Search by title"
+// @Param actor_name query string true "Search by actor name"
+// @Success 200 {array} entity.FilmWithActors
+// @Failure 401 {object} RequestError
+// @Failure 500 {object} RequestError
+// @Resource Films
+// @Route /api/films [get]
 func (h *FilmHandler) GetAll() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// TODO: Refactor this method

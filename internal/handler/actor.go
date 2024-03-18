@@ -27,7 +27,16 @@ func NewActorHandler(actorUsecase ActorUsecaseInterface, logger *logger.Logger) 
 	return &ActorHandler{actorUsecase, logger}
 }
 
-// Create a new actor.
+// @Title Create actor
+// @Description Create a new actor.
+// @Param body body entity.ActorCreateBody true "Create actor body"
+// @Success 201 {object} entity.Actor
+// @Failure 400 {object} RequestError
+// @Failure 401 {object} RequestError
+// @Failure 403 {object} RequestError
+// @Failure 500 {object} RequestError
+// @Resource Actors
+// @Route /api/actors/ [post]
 func (h *ActorHandler) Create() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if isEmptyBody(r) {
@@ -64,7 +73,17 @@ func (h *ActorHandler) Create() http.HandlerFunc {
 	}
 }
 
-// Update an actor by id.
+// @Title Update actor
+// @Description Update an actor by id.
+// @Param id path integer true "Actor ID"
+// @Param body body entity.ActorUpdateBody true "Update actor body"
+// @Success 200 {}
+// @Failure 400 {object} RequestError
+// @Failure 401 {object} RequestError
+// @Failure 403 {object} RequestError
+// @Failure 500 {object} RequestError
+// @Resource Actors
+// @Route /api/actors/{id}/ [patch]
 func (h *ActorHandler) Update() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if isEmptyBody(r) {
@@ -108,7 +127,17 @@ func (h *ActorHandler) Update() http.HandlerFunc {
 	}
 }
 
-// Replace an actor by id.
+// @Title Replace actor
+// @Description Replace an actor by id.
+// @Param id path integer true "Actor ID"
+// @Param body body entity.ActorReplaceBody true "Replace actor body"
+// @Success 200 {}
+// @Failure 400 {object} RequestError
+// @Failure 401 {object} RequestError
+// @Failure 403 {object} RequestError
+// @Failure 500 {object} RequestError
+// @Resource Actors
+// @Route /api/actors/{id}/ [put]
 func (h *ActorHandler) Replace() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if isEmptyBody(r) {
@@ -152,7 +181,16 @@ func (h *ActorHandler) Replace() http.HandlerFunc {
 	}
 }
 
-// Delete an actor by id.
+// @Title Delete actor
+// @Description Delete an actor by id.
+// @Param id path integer true "Actor ID"
+// @Success 204 {}
+// @Failure 400 {object} RequestError
+// @Failure 401 {object} RequestError
+// @Failure 403 {object} RequestError
+// @Failure 500 {object} RequestError
+// @Resource Actors
+// @Route /api/actors/{id} [delete]
 func (h *ActorHandler) Delete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := extractIDFromPath(r.URL.Path)
@@ -179,7 +217,13 @@ func (h *ActorHandler) Delete() http.HandlerFunc {
 	}
 }
 
-// Get all actors.
+// @Title Get all actors
+// @Description Get all actors.
+// @Success 200 {array} entity.ActorWithFilms
+// @Failure 401 {object} RequestError
+// @Failure 500 {object} RequestError
+// @Resource Actors
+// @Route /api/actors [get]
 func (h *ActorHandler) GetAllWithFilms() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()

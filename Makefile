@@ -16,4 +16,7 @@ migrate_up:
 migrate_down:
 	migrate -path migrations -database "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DATABASE)?sslmode=disable" -verbose down
 
+gen_docs:
+	go-swagger3 --module-path . --main-file-path ./cmd/app/main.go --output ./api/swagger.yaml --schema-without-pkg --generate-yaml true
+
 .DEFAULT_GOAL := build

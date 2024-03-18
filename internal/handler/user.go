@@ -24,6 +24,15 @@ func NewUserHandler(userUsecase UserUsecaseInterface, logger *logger.Logger) *Us
 	return &UserHandler{userUsecase, logger}
 }
 
+// @Title Register
+// @Description Register a new user.
+// @Param body body entity.UserRegisterBody true "Register body"
+// @Success 201 {object} entity.User
+// @Failure 400 {object} RequestError
+// @Failure 409 {object} RequestError
+// @Failure 500 {object} RequestError
+// @Resource Users
+// @Route /api/auth/register/ [post]
 func (h *UserHandler) Register() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if isEmptyBody(r) {
@@ -45,7 +54,7 @@ func (h *UserHandler) Register() http.HandlerFunc {
 		}
 
 		ctx := context.Background()
-		film, err := h.userUsecase.Register(&ctx, body)
+		user, err := h.userUsecase.Register(&ctx, body)
 		if err != nil {
 			switch err {
 			case repo.ErrNonUniqueUsername:
@@ -58,11 +67,19 @@ func (h *UserHandler) Register() http.HandlerFunc {
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(film)
+		json.NewEncoder(w).Encode(user)
 		h.logger.Log(r, http.StatusCreated, nil)
 	}
 }
 
+// @Title Login
+// @Description Log in a user.
+// @Param body body entity.UserLoginBody true "Login body"
+// @Success 200 {object} entity.UserLoginResponse
+// @Failure 400 {object} RequestError
+// @Failure 500 {object} RequestError
+// @Resource Users
+// @Route /api/auth/login/ [post]
 func (h *UserHandler) Login() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if isEmptyBody(r) {
@@ -96,7 +113,7 @@ func (h *UserHandler) Login() http.HandlerFunc {
 			}
 			return
 		}
-		json.NewEncoder(w).Encode(map[string]string{"access_token": accessToken})
+		json.NewEncoder(w).Encode(entity.UserLoginResponse{AccessToken: accessToken})
 		h.logger.Log(r, http.StatusOK, nil)
 	}
 }

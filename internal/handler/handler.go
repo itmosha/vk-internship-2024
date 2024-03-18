@@ -20,6 +20,10 @@ var (
 	ErrServerError = errors.New("internal server error")
 )
 
+type RequestError struct {
+	Message string `json:"message"`
+}
+
 func readBodyToStruct[T any](r *http.Request, out *T) (*T, error) {
 	err := json.NewDecoder(r.Body).Decode(out)
 	if err != nil {
@@ -49,5 +53,5 @@ func isEmptyBody(r *http.Request) bool {
 func returnError(w http.ResponseWriter, status int, err error) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(map[string]string{"message": err.Error()})
+	json.NewEncoder(w).Encode(RequestError{Message: err.Error()})
 }

@@ -28,12 +28,12 @@ func AuthMiddleware(isAdminRequred bool, next http.HandlerFunc) http.HandlerFunc
 
 		claims, isExpired, err := jwtfuncs.ExtractAccessTokenClaims(accessToken)
 		if err != nil {
-			w.WriteHeader(http.StatusForbidden)
+			w.WriteHeader(http.StatusUnauthorized)
 			json.NewEncoder(w).Encode(map[string]string{"message": ErrInvalidAccessToken.Error()})
 			return
 		}
 		if isExpired {
-			w.WriteHeader(http.StatusForbidden)
+			w.WriteHeader(http.StatusUnauthorized)
 			json.NewEncoder(w).Encode(map[string]string{"message": ErrAccessTokenExpired.Error()})
 			return
 		}

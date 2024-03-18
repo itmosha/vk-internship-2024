@@ -31,3 +31,8 @@ func ValidateUserLoginBody(body *UserLoginBody) (err error) {
 	}
 	return
 }
+
+// User login response.
+type UserLoginResponse struct {
+	AccessToken string `json:"access_token"`
+}
