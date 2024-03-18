@@ -9,15 +9,20 @@ import (
 	"github.com/itmosha/vk-internship-2024/internal/http_server"
 	repo "github.com/itmosha/vk-internship-2024/internal/repo/postgres"
 	"github.com/itmosha/vk-internship-2024/internal/usecase"
+	"github.com/itmosha/vk-internship-2024/pkg/logger"
 	"github.com/itmosha/vk-internship-2024/pkg/postgres"
 )
 
 // Create all necessary dependencies and run application.
 func Run(cfg *config.Config) {
+	// Setup postgres connection
 	pg, err := postgres.NewPostgres(cfg.DB.Address, cfg.DB.User, cfg.DB.Password, cfg.DB.Name)
 	if err != nil {
 		log.Fatalf("could not create postgres connection: %s\n", err)
 	}
+
+	// Setup logger
+	logger := logger.NewLogger("logs/logs.txt", cfg.Env)
 
 	// Create repos
 	filmRepo := repo.NewFilmRepoPostgres(pg)
@@ -31,9 +36,9 @@ func Run(cfg *config.Config) {
 	userUsecase := usecase.NewUserUsecase(userRepo)
 
 	// Create handlers
-	filmHandler := handler.NewFilmHander(filmUsecase)
-	actorHandler := handler.NewActorHandler(actorUsecase)
-	userHandler := handler.NewUserHandler(userUsecase)
+	filmHandler := handler.NewFilmHander(filmUsecase, logger)
+	actorHandler := handler.NewActorHandler(actorUsecase, logger)
+	userHandler := handler.NewUserHandler(userUsecase, logger)
 
 	// Setup router
 	router := http_server.NewRouter(filmHandler, actorHandler, userHandler)

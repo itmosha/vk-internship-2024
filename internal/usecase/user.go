@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/itmosha/vk-internship-2024/internal/entity"
-	jwtfuncs "github.com/itmosha/vk-internship-2024/pkg/jwt_funcs"
+	jwtfuncs "github.com/itmosha/vk-internship-2024/pkg/jwtfuncs"
 )
 
 type UserRepoInterface interface {

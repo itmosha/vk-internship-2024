@@ -8,6 +8,7 @@ import (
 
 	"github.com/itmosha/vk-internship-2024/internal/entity"
 	repo "github.com/itmosha/vk-internship-2024/internal/repo/postgres"
+	"github.com/itmosha/vk-internship-2024/pkg/logger"
 )
 
 type FilmUsecaseInterface interface {
@@ -20,27 +21,31 @@ type FilmUsecaseInterface interface {
 
 type FilmHandler struct {
 	filmUsecase FilmUsecaseInterface
+	logger      *logger.Logger
 }
 
 // Create new FilmHandler.
-func NewFilmHander(filmUsecase FilmUsecaseInterface) *FilmHandler {
-	return &FilmHandler{filmUsecase}
+func NewFilmHander(filmUsecase FilmUsecaseInterface, logger *logger.Logger) *FilmHandler {
+	return &FilmHandler{filmUsecase, logger}
 }
 
 // Create a new film.
 func (h *FilmHandler) Create() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if isEmptyBody(r) {
+			h.logger.Log(r, http.StatusBadRequest, ErrEmptyBody)
 			returnError(w, http.StatusBadRequest, ErrEmptyBody)
 			return
 		}
 		body, err := readBodyToStruct(r, &entity.FilmCreateBody{})
 		if err != nil {
+			h.logger.Log(r, http.StatusBadRequest, err)
 			returnError(w, http.StatusBadRequest, err)
 			return
 		}
 		err = entity.ValidateFilmCreateBody(body)
 		if err != nil {
+			h.logger.Log(r, http.StatusBadRequest, err)
 			returnError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -50,14 +55,17 @@ func (h *FilmHandler) Create() http.HandlerFunc {
 		if err != nil {
 			switch err {
 			case repo.ErrActorNotFound:
+				h.logger.Log(r, http.StatusBadRequest, err)
 				returnError(w, http.StatusBadRequest, err)
-				return
 			default:
+				h.logger.Log(r, http.StatusInternalServerError, err)
 				returnError(w, http.StatusInternalServerError, ErrServerError)
-				return
 			}
+			return
 		}
+		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(film)
+		h.logger.Log(r, http.StatusCreated, nil)
 	}
 }
 
@@ -65,21 +73,25 @@ func (h *FilmHandler) Create() http.HandlerFunc {
 func (h *FilmHandler) Update() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if isEmptyBody(r) {
+			h.logger.Log(r, http.StatusBadRequest, ErrEmptyBody)
 			returnError(w, http.StatusBadRequest, ErrEmptyBody)
 			return
 		}
 		id, err := extractIDFromPath(r.URL.Path)
 		if err != nil {
+			h.logger.Log(r, http.StatusBadRequest, err)
 			returnError(w, http.StatusBadRequest, err)
 			return
 		}
 		body, err := readBodyToStruct(r, &entity.FilmUpdateBody{})
 		if err != nil {
+			h.logger.Log(r, http.StatusBadRequest, err)
 			returnError(w, http.StatusBadRequest, err)
 			return
 		}
 		err = entity.ValidateFilmUpdateBody(body)
 		if err != nil {
+			h.logger.Log(r, http.StatusBadRequest, err)
 			returnError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -90,16 +102,18 @@ func (h *FilmHandler) Update() http.HandlerFunc {
 			fmt.Println(err)
 			switch err {
 			case repo.ErrFilmNotFound:
+				h.logger.Log(r, http.StatusBadRequest, err)
 				returnError(w, http.StatusBadRequest, err)
-				return
 			case repo.ErrActorNotFound:
+				h.logger.Log(r, http.StatusBadRequest, err)
 				returnError(w, http.StatusBadRequest, err)
-				return
 			default:
+				h.logger.Log(r, http.StatusInternalServerError, err)
 				returnError(w, http.StatusInternalServerError, ErrServerError)
-				return
 			}
+			return
 		}
+		h.logger.Log(r, http.StatusOK, nil)
 	}
 }
 
@@ -107,21 +121,25 @@ func (h *FilmHandler) Update() http.HandlerFunc {
 func (h *FilmHandler) Replace() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if isEmptyBody(r) {
+			h.logger.Log(r, http.StatusBadRequest, ErrEmptyBody)
 			returnError(w, http.StatusBadRequest, ErrEmptyBody)
 			return
 		}
 		id, err := extractIDFromPath(r.URL.Path)
 		if err != nil {
+			h.logger.Log(r, http.StatusBadRequest, err)
 			returnError(w, http.StatusBadRequest, err)
 			return
 		}
 		body, err := readBodyToStruct(r, &entity.FilmReplaceBody{})
 		if err != nil {
+			h.logger.Log(r, http.StatusBadRequest, err)
 			returnError(w, http.StatusBadRequest, err)
 			return
 		}
 		err = entity.ValidateFilmReplaceBody(body)
 		if err != nil {
+			h.logger.Log(r, http.StatusBadRequest, err)
 			returnError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -131,16 +149,18 @@ func (h *FilmHandler) Replace() http.HandlerFunc {
 		if err != nil {
 			switch err {
 			case repo.ErrFilmNotFound:
+				h.logger.Log(r, http.StatusBadRequest, err)
 				returnError(w, http.StatusBadRequest, err)
-				return
 			case repo.ErrActorNotFound:
+				h.logger.Log(r, http.StatusBadRequest, err)
 				returnError(w, http.StatusBadRequest, err)
-				return
 			default:
+				h.logger.Log(r, http.StatusInternalServerError, err)
 				returnError(w, http.StatusInternalServerError, ErrServerError)
-				return
 			}
+			return
 		}
+		h.logger.Log(r, http.StatusOK, nil)
 	}
 }
 
@@ -149,6 +169,7 @@ func (h *FilmHandler) Delete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := extractIDFromPath(r.URL.Path)
 		if err != nil {
+			h.logger.Log(r, http.StatusBadRequest, err)
 			returnError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -157,25 +178,29 @@ func (h *FilmHandler) Delete() http.HandlerFunc {
 		if err != nil {
 			switch err {
 			case repo.ErrFilmNotFound:
+				h.logger.Log(r, http.StatusBadRequest, err)
 				returnError(w, http.StatusBadRequest, err)
-				return
 			default:
+				h.logger.Log(r, http.StatusInternalServerError, err)
 				returnError(w, http.StatusInternalServerError, ErrServerError)
-				return
 			}
+			return
 		}
 		w.WriteHeader(http.StatusNoContent)
+		h.logger.Log(r, http.StatusNoContent, nil)
 	}
 }
 
 // Get all films.
 func (h *FilmHandler) GetAll() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// TODO: Refactor this method
 		query := r.URL.Query()
 		sortField := query.Get("sort_by")
 		if sortField == "" {
 			sortField = entity.FilmDefaultSortField
 		} else if !entity.IsValidParam("sort_field", sortField) {
+			h.logger.Log(r, http.StatusBadRequest, ErrInvalidSortByParam)
 			returnError(w, http.StatusBadRequest, ErrInvalidSortByParam)
 			return
 		}
@@ -183,6 +208,7 @@ func (h *FilmHandler) GetAll() http.HandlerFunc {
 		if sortOrder == "" {
 			sortOrder = entity.FilmDefaultSortOrder
 		} else if !entity.IsValidParam("sort_order", sortOrder) {
+			h.logger.Log(r, http.StatusBadRequest, ErrInvalidOrderParam)
 			returnError(w, http.StatusBadRequest, ErrInvalidOrderParam)
 			return
 		}
@@ -190,7 +216,6 @@ func (h *FilmHandler) GetAll() http.HandlerFunc {
 			Field: sortField,
 			Order: sortOrder,
 		}
-		// TODO: Refactor this (use FilmSearchFields)
 		searchParams := &entity.FilmSearchParams{
 			Title:     query.Get("title"),
 			ActorName: query.Get("actor_name"),
@@ -201,10 +226,16 @@ func (h *FilmHandler) GetAll() http.HandlerFunc {
 			fmt.Println(err)
 			switch err {
 			default:
+				h.logger.Log(r, http.StatusInternalServerError, err)
 				returnError(w, http.StatusInternalServerError, ErrServerError)
-				return
 			}
+			return
 		}
-		json.NewEncoder(w).Encode(films)
+		if films == nil { // Handle empty films slice, return [] instead of nil
+			json.NewEncoder(w).Encode([]struct{}{})
+		} else {
+			json.NewEncoder(w).Encode(films)
+		}
+		h.logger.Log(r, http.StatusOK, nil)
 	}
 }

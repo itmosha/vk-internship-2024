@@ -1,1 +1,1 @@
-docker-compose down
+docker-compose --env-file ./.env -f config/docker-compose-local.yaml down
