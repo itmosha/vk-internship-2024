@@ -17,7 +17,7 @@ var (
 )
 
 // AuthMiddleware is a middleware to check authorization.
-func AuthMiddleware(isAdminRequred bool, next http.HandlerFunc) http.HandlerFunc {
+func AuthMiddleware(isAdminRequired bool, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		accessToken := extractTokenFromHeader(req.Header.Get("Authorization"))
 		if accessToken == "" {
@@ -37,7 +37,7 @@ func AuthMiddleware(isAdminRequred bool, next http.HandlerFunc) http.HandlerFunc
 			json.NewEncoder(w).Encode(map[string]string{"message": ErrAccessTokenExpired.Error()})
 			return
 		}
-		if isAdminRequred && !claims.IsAdmin {
+		if isAdminRequired && !claims.IsAdmin {
 			w.WriteHeader(http.StatusForbidden)
 			json.NewEncoder(w).Encode(map[string]string{"message": ErrNotEnoughPermissions.Error()})
 			return
